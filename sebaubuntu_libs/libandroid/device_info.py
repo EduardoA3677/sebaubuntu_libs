@@ -204,13 +204,30 @@ class DeviceInfo:
             value = self.build_prop._get_prop(prop, str)
             if value is not None:
                 # Si encontramos un valor en una propiedad alternativa, lo usamos
-                # Usando el método correcto: set_prop en lugar de acceder a props directamente
+                # Usar set_prop en lugar de acceder a props directamente
                 self.build_prop.set_prop("ro.product.system.device", value)
                 return
         
         # Si no encontramos ninguna propiedad alternativa, usar "generic"
-        # Usando el método correcto: set_prop en lugar de acceder a props directamente
         self.build_prop.set_prop("ro.product.system.device", "generic")
+        
+    # También asegurar que otras propiedades críticas existan
+    if not any(self.build_prop._get_prop(prop, str) for prop in DEVICE_MANUFACTURER):
+        # Buscar propiedades alternativas para manufacturer
+        alt_manufacturer_props = [
+            "ro.product.brand",
+            "ro.product.vendor.brand",
+            "ro.vendor.product.brand"
+        ]
+        
+        for prop in alt_manufacturer_props:
+            value = self.build_prop._get_prop(prop, str)
+            if value is not None:
+                self.build_prop.set_prop("ro.product.system.manufacturer", value)
+                break
+        else:
+            self.build_prop.set_prop("ro.product.system.manufacturer", "Generic")
+            
 	def get_first_prop(self, props: List[str], data_type: Callable[[str], Any] = str,
 	                   default: Any = None, raise_exception: bool = True):
 		for prop in props:
