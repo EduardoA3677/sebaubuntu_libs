@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2022 Sebastiano Barezzi
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -14,7 +13,7 @@ from subprocess import check_output, STDOUT, CalledProcessError
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-AIK_REPO = "https://github.com/SebaUbuntu/AIK-Linux-mirror"
+AIK_REPO = "https://github.com/EduardoA3677/AIK-Linux-mirror"
 
 ALLOWED_OS = [
 	"Linux",
@@ -22,83 +21,83 @@ ALLOWED_OS = [
 ]
 
 class AIKImageInfo:
-    def __init__(
-        self,
-        base_address: Optional[str],
-        board_name: Optional[str],
-        cmdline: Optional[str],
-        dt: Optional[Path],
-        dtb: Optional[Path],
-        dtb_offset: Optional[str],
-        dtbo: Optional[Path],
-        header_version: Optional[str],
-        image_type: Optional[str],
-        kernel: Optional[Path],
-        kernel_offset: Optional[str],
-        origsize: Optional[str],
-        os_version: Optional[str],
-        pagesize: Optional[str],
-        ramdisk: Optional[Path],
-        ramdisk_compression: Optional[str],
-        ramdisk_offset: Optional[str],
-        sigtype: Optional[str],
-        tags_offset: Optional[str],
-        vendor_ramdisk: Optional[Path] = None,  # Añadido para vendor_boot v4
-        vendor_ramdisk_table: Optional[Path] = None,  # Añadido para vendor_boot v4
-        vendor_bootconfig: Optional[Path] = None,  # Añadido para vendor_boot v4
-    ):
-        self.kernel = kernel
-        self.dt = dt
-        self.dtb = dtb
-        self.dtbo = dtbo
-        self.ramdisk = ramdisk
-        self.base_address = base_address
-        self.board_name = board_name
-        self.cmdline = cmdline
-        self.dtb_offset = dtb_offset
-        self.header_version = header_version
-        self.image_type = image_type
-        self.kernel_offset = kernel_offset
-        self.origsize = origsize
-        self.os_version = os_version
-        self.pagesize = pagesize
-        self.ramdisk_compression = ramdisk_compression
-        self.ramdisk_offset = ramdisk_offset
-        self.sigtype = sigtype
-        self.tags_offset = tags_offset
-        # Añadido soporte para vendor_boot v4
-        self.vendor_ramdisk = vendor_ramdisk
-        self.vendor_ramdisk_table = vendor_ramdisk_table
-        self.vendor_bootconfig = vendor_bootconfig
+	def __init__(
+		self,
+		base_address: Optional[str],
+		board_name: Optional[str],
+		cmdline: Optional[str],
+		dt: Optional[Path],
+		dtb: Optional[Path],
+		dtb_offset: Optional[str],
+		dtbo: Optional[Path],
+		header_version: Optional[str],
+		image_type: Optional[str],
+		kernel: Optional[Path],
+		kernel_offset: Optional[str],
+		origsize: Optional[str],
+		os_version: Optional[str],
+		pagesize: Optional[str],
+		ramdisk: Optional[Path],
+		ramdisk_compression: Optional[str],
+		ramdisk_offset: Optional[str],
+		sigtype: Optional[str],
+		tags_offset: Optional[str],
+		vendor_ramdisk: Optional[Path] = None,  # Añadido para vendor_boot v4
+		vendor_ramdisk_table: Optional[Path] = None,  # Añadido para vendor_boot v4
+		vendor_bootconfig: Optional[Path] = None,  # Añadido para vendor_boot v4
+	):
+		self.kernel = kernel
+		self.dt = dt
+		self.dtb = dtb
+		self.dtbo = dtbo
+		self.ramdisk = ramdisk
+		self.base_address = base_address
+		self.board_name = board_name
+		self.cmdline = cmdline
+		self.dtb_offset = dtb_offset
+		self.header_version = header_version
+		self.image_type = image_type
+		self.kernel_offset = kernel_offset
+		self.origsize = origsize
+		self.os_version = os_version
+		self.pagesize = pagesize
+		self.ramdisk_compression = ramdisk_compression
+		self.ramdisk_offset = ramdisk_offset
+		self.sigtype = sigtype
+		self.tags_offset = tags_offset
+		# Añadido soporte para vendor_boot v4
+		self.vendor_ramdisk = vendor_ramdisk
+		self.vendor_ramdisk_table = vendor_ramdisk_table
+		self.vendor_bootconfig = vendor_bootconfig
 
-    def __str__(self):
-        output = (
-            f"base address: {self.base_address}\n"
-            f"board name: {self.board_name}\n"
-            f"cmdline: {self.cmdline}\n"
-            f"dtb offset: {self.dtb_offset}\n"
-            f"header version: {self.header_version}\n"
-            f"image type: {self.image_type}\n"
-            f"kernel offset: {self.kernel_offset}\n"
-            f"original size: {self.origsize}\n"
-            f"os version: {self.os_version}\n"
-            f"page size: {self.pagesize}\n"
-            f"ramdisk compression: {self.ramdisk_compression}\n"
-            f"ramdisk offset: {self.ramdisk_offset}\n"
-            f"sigtype: {self.sigtype}\n"
-            f"tags offset: {self.tags_offset}\n"
-        )
-        
-        # Añadir información de vendor_boot v4 si está disponible
-        if self.vendor_ramdisk is not None:
-            output += f"vendor ramdisk: {self.vendor_ramdisk}\n"
-        if self.vendor_ramdisk_table is not None:
-            output += f"vendor ramdisk table: {self.vendor_ramdisk_table}\n"
-        if self.vendor_bootconfig is not None:
-            output += f"vendor bootconfig: {self.vendor_bootconfig}\n"
-            
-        return output
-        
+	def __str__(self):
+		output = (
+			f"base address: {self.base_address}\n"
+			f"board name: {self.board_name}\n"
+			f"cmdline: {self.cmdline}\n"
+			f"dtb offset: {self.dtb_offset}\n"
+			f"header version: {self.header_version}\n"
+			f"image type: {self.image_type}\n"
+			f"kernel offset: {self.kernel_offset}\n"
+			f"original size: {self.origsize}\n"
+			f"os version: {self.os_version}\n"
+			f"page size: {self.pagesize}\n"
+			f"ramdisk compression: {self.ramdisk_compression}\n"
+			f"ramdisk offset: {self.ramdisk_offset}\n"
+			f"sigtype: {self.sigtype}\n"
+			f"tags offset: {self.tags_offset}\n"
+		)
+		
+		# Añadir información de vendor_boot v4 si está disponible
+		if self.vendor_ramdisk is not None:
+			output += f"vendor ramdisk: {self.vendor_ramdisk}\n"
+		if self.vendor_ramdisk_table is not None:
+			output += f"vendor ramdisk table: {self.vendor_ramdisk_table}\n"
+		if self.vendor_bootconfig is not None:
+			output += f"vendor bootconfig: {self.vendor_bootconfig}\n"
+			
+		return output
+		
 class AIKManager:
 	"""
 	This class is responsible for dealing with AIK tasks
@@ -156,42 +155,55 @@ class AIKManager:
 	def cleanup(self):
 		return self._execute_script("cleanup.sh")
 
-    def _get_current_extracted_info(self, prefix: str):
-        # Determinar si es vendor_boot y tiene header v4
-        header_version = self._read_recovery_file(prefix, "header_version", default="0")
-        is_vendor_boot_v4 = (prefix == "vendor_boot" and header_version == "4")
-    
-        # Ruta al vendor_ramdisk para vendor_boot v4
-        vendor_ramdisk_path = self.path / "vendor_ramdisk" if is_vendor_boot_v4 and (self.path / "vendor_ramdisk").is_dir() else None
-        return AIKImageInfo(
-            base_address=self._read_recovery_file(prefix, "base"),
-            board_name=self._read_recovery_file(prefix, "board"),
-            cmdline=self._read_recovery_file(prefix, "cmdline") \
-                or self._read_recovery_file(prefix, "vendor_cmdline"),
-            dt=self._get_extracted_info(prefix, "dt", check_size=True),
-            dtb=self._get_extracted_info(prefix, "dtb", check_size=True),
-            dtb_offset=self._read_recovery_file(prefix, "dtb_offset"),
-            dtbo=self._get_extracted_info(prefix, "dtbo", check_size=True) \
-                or self._get_extracted_info(prefix, "recovery_dtbo", check_size=True),
-            header_version=header_version,
-            image_type=self._read_recovery_file(prefix, "imgtype"),
-            kernel=self._get_extracted_info(prefix, "kernel", check_size=True),
-            kernel_offset=self._read_recovery_file(prefix, "kernel_offset"),
-            origsize=self._read_recovery_file(prefix, "origsize"),
-            os_version=self._read_recovery_file(prefix, "os_version"),
-            pagesize=self._read_recovery_file(prefix, "pagesize"),
-            ramdisk=self.ramdisk_path if self.ramdisk_path.is_dir() else None,
-            ramdisk_compression=self._read_recovery_file(prefix, "ramdiskcomp") \
-                or self._read_recovery_file(prefix, "vendor_ramdiskcomp"),
-            ramdisk_offset=self._read_recovery_file(prefix, "ramdisk_offset"),
-            sigtype=self._read_recovery_file(prefix, "sigtype"),
-            tags_offset=self._read_recovery_file(prefix, "tags_offset"),
-            # Añadido soporte para vendor_boot v4
-            vendor_ramdisk=vendor_ramdisk_path,
-            vendor_ramdisk_table=self._get_extracted_info(prefix, "vendor_ramdisk_table", check_size=True),
-            vendor_bootconfig=self._get_extracted_info(prefix, "vendor_bootconfig", check_size=True),
-        )
-        
+	def _get_current_extracted_info(self, prefix: str):
+		# Determinar si es vendor_boot y tiene header v4
+		header_version = self._read_recovery_file(prefix, "header_version", default="0")
+		
+		# Intentar detectar vendor_boot v4 incluso si el archivo header_version no lo indica
+		if prefix == "vendor_boot":
+			# Verificar si hay evidencia de vendor_boot v4 en el archivo extraído
+			vendor_boot_extracted = self.path / f"{prefix}.extracted"
+			if vendor_boot_extracted.exists():
+				with open(vendor_boot_extracted, 'r') as f:
+					content = f.read()
+					if "Processing vendor_boot v4 ramdisk table" in content:
+						LOGI("Found evidence of vendor_boot v4 in extraction log, overriding header version")
+						header_version = "4"
+		
+		is_vendor_boot_v4 = (prefix == "vendor_boot" and header_version == "4")
+		
+		# Ruta al vendor_ramdisk para vendor_boot v4
+		vendor_ramdisk_path = self.path / "vendor_ramdisk" if is_vendor_boot_v4 and (self.path / "vendor_ramdisk").is_dir() else None
+		
+		return AIKImageInfo(
+			base_address=self._read_recovery_file(prefix, "base"),
+			board_name=self._read_recovery_file(prefix, "board"),
+			cmdline=self._read_recovery_file(prefix, "cmdline") \
+				or self._read_recovery_file(prefix, "vendor_cmdline"),
+			dt=self._get_extracted_info(prefix, "dt", check_size=True),
+			dtb=self._get_extracted_info(prefix, "dtb", check_size=True),
+			dtb_offset=self._read_recovery_file(prefix, "dtb_offset"),
+			dtbo=self._get_extracted_info(prefix, "dtbo", check_size=True) \
+				or self._get_extracted_info(prefix, "recovery_dtbo", check_size=True),
+			header_version=header_version,
+			image_type=self._read_recovery_file(prefix, "imgtype"),
+			kernel=self._get_extracted_info(prefix, "kernel", check_size=True),
+			kernel_offset=self._read_recovery_file(prefix, "kernel_offset"),
+			origsize=self._read_recovery_file(prefix, "origsize"),
+			os_version=self._read_recovery_file(prefix, "os_version"),
+			pagesize=self._read_recovery_file(prefix, "pagesize"),
+			ramdisk=self.ramdisk_path if self.ramdisk_path.is_dir() else None,
+			ramdisk_compression=self._read_recovery_file(prefix, "ramdiskcomp") \
+				or self._read_recovery_file(prefix, "vendor_ramdiskcomp"),
+			ramdisk_offset=self._read_recovery_file(prefix, "ramdisk_offset"),
+			sigtype=self._read_recovery_file(prefix, "sigtype"),
+			tags_offset=self._read_recovery_file(prefix, "tags_offset"),
+			# Añadido soporte para vendor_boot v4
+			vendor_ramdisk=vendor_ramdisk_path,
+			vendor_ramdisk_table=self._get_extracted_info(prefix, "vendor_ramdisk_table", check_size=True),
+			vendor_bootconfig=self._get_extracted_info(prefix, "vendor_bootconfig", check_size=True),
+		)
+
 	def _read_recovery_file(
 		self, prefix: str, fragment: str, default: Optional[str] = None
 	) -> Optional[str]:
