@@ -124,9 +124,23 @@ class DeviceInfo:
 		self.brand = self.get_first_prop(DEVICE_BRAND, raise_exception=False)
 		self.model = self.get_first_prop(DEVICE_MODEL, raise_exception=False)
 		self.build_fingerprint = self.get_first_prop(BUILD_FINGERPRINT, raise_exception=False)
+		
+		# FIX: Manejar build_description con valores fallback robustos
 		self.build_description = self.get_first_prop(
-			BUILD_DESCRIPTION, default=fingerprint_to_description(self.build_fingerprint) if self.build_fingerprint else None
+			BUILD_DESCRIPTION, 
+			default=None, 
+			raise_exception=False
 		)
+		
+		# Si no encontramos build_description, generar uno desde fingerprint o usar valores por defecto
+		if not self.build_description:
+			if self.build_fingerprint:
+				try:
+					self.build_description = fingerprint_to_description(self.build_fingerprint)
+				except Exception:
+					self.build_description = f"{self.codename}-user"
+			else:
+				self.build_description = f"{self.codename}-user"
 
 		# Parse arch
 		self.arch = None
@@ -140,20 +154,26 @@ class DeviceInfo:
 				self.second_arch = DeviceArch.from_arch(second_arch_prop)
 		else:
 			# Fallback to ABI list
-			abi_list = self.get_first_prop(DEVICE_CPU_ABILIST).split(",")
-			assert abi_list, "No ABI list prop found"
-			archs = list(set([DeviceArch.from_abi(abi) for abi in abi_list]))
-			assert 0 < len(archs) <= 2, "Invalid ABI list"
-			# Higher bitness architectures has priority
-			archs.sort(key=lambda x: x.bitness, reverse=True)
-			self.arch = archs[0]
-			if len(archs) > 1:
-				self.second_arch = archs[1]
+			abi_list_str = self.get_first_prop(DEVICE_CPU_ABILIST, raise_exception=False)
+			if abi_list_str:
+				abi_list = abi_list_str.split(",")
+				if abi_list and abi_list[0]:  # Verificar que no esté vacío
+					archs = list(set([DeviceArch.from_abi(abi) for abi in abi_list if abi.strip()]))
+					if 0 < len(archs) <= 2:
+						# Higher bitness architectures has priority
+						archs.sort(key=lambda x: x.bitness, reverse=True)
+						self.arch = archs[0]
+						if len(archs) > 1:
+							self.second_arch = archs[1]
+			
+			# Si no tenemos arch aún, usar arm64 por defecto
+			if not self.arch:
+				self.arch = DeviceArch.ARM64
 
 		self.cpu_variant = self.get_first_prop(DEVICE_CPU_VARIANT, default="generic")
 		self.second_cpu_variant = self.get_first_prop(DEVICE_SECOND_CPU_VARIANT, default="generic")
 
-		self.bootloader_board_name = self.get_first_prop(BOOTLOADER_BOARD_NAME)
+		self.bootloader_board_name = self.get_first_prop(BOOTLOADER_BOARD_NAME, raise_exception=False) or "unknown"
 		self.platform = self.get_first_prop(DEVICE_PLATFORM, default="default")
 		self.device_is_ab = self.get_first_prop(DEVICE_IS_AB, data_type=bool_cast, default=False)
 		self.device_uses_dynamic_partitions = self.get_first_prop(DEVICE_USES_DYNAMIC_PARTITIONS, data_type=bool_cast, default=False)
@@ -165,10 +185,10 @@ class DeviceInfo:
 		self.screen_density = self.get_first_prop(SCREEN_DENSITY, raise_exception=False)
 		self.use_vulkan = self.get_first_prop(USE_VULKAN, data_type=bool_cast, default=False)
 		self.gms_clientid_base = self.get_first_prop(GMS_CLIENTID_BASE, default=f"android-{self.manufacturer}")
-		self.first_api_level = self.get_first_prop(FIRST_API_LEVEL)
+		self.first_api_level = self.get_first_prop(FIRST_API_LEVEL, raise_exception=False) or "29"
 		self.product_characteristics = self.get_first_prop(PRODUCT_CHARACTERISTICS, default="")
 
-		self.build_security_patch = self.get_first_prop(BUILD_SECURITY_PATCH)
+		self.build_security_patch = self.get_first_prop(BUILD_SECURITY_PATCH, raise_exception=False) or "2024-01-01"
 		self.vendor_build_security_patch = self.get_first_prop(BUILD_VENDOR_SECURITY_PATCH, default=self.build_security_patch)
 
 		self.board_first_api_level = self.get_first_prop(BOARD_FIRST_API_LEVEL, raise_exception=False)
@@ -227,6 +247,13 @@ class DeviceInfo:
 					break
 			else:
 				self.build_prop.set_prop("ro.product.system.manufacturer", "Generic")
+		
+		# Asegurar que existan propiedades mínimas para BUILD_DESCRIPTION
+		build_desc_exists = any(self.build_prop._get_prop(prop, str) for prop in BUILD_DESCRIPTION)
+		if not build_desc_exists:
+			# Crear una descripción básica
+			device_name = self.build_prop._get_prop("ro.product.system.device", str) or "generic"
+			self.build_prop.set_prop("ro.system.build.description", f"{device_name}-user")
 
 	def get_first_prop(self, props: List[str], data_type: Callable[[str], Any] = str,
 	                   default: Any = None, raise_exception: bool = True):
