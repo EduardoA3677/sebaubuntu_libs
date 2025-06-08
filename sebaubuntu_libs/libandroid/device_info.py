@@ -175,58 +175,42 @@ class DeviceInfo:
 		self.board_api_level = self.get_first_prop(BOARD_API_LEVEL, raise_exception=False)
 
 	def _ensure_essential_props(self):
-		"""Ensure essential properties exist in build_prop."""
-		# Verificar si ro.product.system.device existe
-		system_device_exists = False
-		for prop in DEVICE_CODENAME:
-			if self.build_prop._get_prop(prop, str) is not None:
-				system_device_exists = True
-				break
-		
-		# Si no existe, intentar extraerlo de otras propiedades
-		if not system_device_exists:
-			# Lista extendida de propiedades alternativas para intentar
-			alt_props = [
-				"ro.product.device",
-				"ro.product.vendor.device",
-				"ro.vendor.product.device",
-				"ro.build.product",
-				"ro.product.name",
-				"ro.product.odm.device",
-				"ro.product.product.device",
-				"ro.product.board",
-				"ro.product.vendor.name",
-				"ro.vendor.product.name",
-				"ro.build.product"
-			]
-			
-			for prop in alt_props:
-				value = self.build_prop._get_prop(prop, str)
-				if value is not None:
-					# Si encontramos un valor en una propiedad alternativa, lo usamos
-					self.build_prop.props["ro.product.system.device"] = value
-					return
-			
-			# Si no encontramos ninguna propiedad alternativa, usar "generic"
-			self.build_prop.props["ro.product.system.device"] = "generic"
-			
-		# También asegurar que otras propiedades críticas existan
-		if not any(self.build_prop._get_prop(prop, str) for prop in DEVICE_MANUFACTURER):
-			# Buscar propiedades alternativas para manufacturer
-			alt_manufacturer_props = [
-				"ro.product.brand",
-				"ro.product.vendor.brand",
-				"ro.vendor.product.brand"
-			]
-			
-			for prop in alt_manufacturer_props:
-				value = self.build_prop._get_prop(prop, str)
-				if value is not None:
-					self.build_prop.props["ro.product.system.manufacturer"] = value
-					break
-			else:
-				self.build_prop.props["ro.product.system.manufacturer"] = "Generic"
-
+    """Ensure essential properties exist in build_prop."""
+    # Verificar si ro.product.system.device existe
+    system_device_exists = False
+    for prop in DEVICE_CODENAME:
+        if self.build_prop._get_prop(prop, str) is not None:
+            system_device_exists = True
+            break
+    
+    # Si no existe, intentar extraerlo de otras propiedades
+    if not system_device_exists:
+        # Lista extendida de propiedades alternativas para intentar
+        alt_props = [
+            "ro.product.device",
+            "ro.product.vendor.device",
+            "ro.vendor.product.device",
+            "ro.build.product",
+            "ro.product.name",
+            "ro.product.odm.device",
+            "ro.product.product.device",
+            "ro.product.board",
+            "ro.product.vendor.name",
+            "ro.vendor.product.name",
+            "ro.build.product"
+        ]
+        
+        for prop in alt_props:
+            value = self.build_prop._get_prop(prop, str)
+            if value is not None:
+                # Si encontramos un valor en una propiedad alternativa, lo usamos
+                # Usando el método correcto: set_prop en lugar de acceder a props directamente
+                self.build_prop.set_prop("ro.product.system.device", value)
+                return
+        
+        # Si no encontramos ninguna propiedad alternativa, usar "generic"
+        # Usando el método correcto: set_prop en lugar de acceder a props directamente
+        self.build_prop.set_prop("ro.product.system.device", "generic")
 	def get_first_prop(self, props: List[str], data_type: Callable[[str], Any] = str,
 	                   default: Any = None, raise_exception: bool = True):
 		for prop in props:
