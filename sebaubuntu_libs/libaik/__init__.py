@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2022 Sebastiano Barezzi
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -14,7 +13,7 @@ from subprocess import check_output, STDOUT, CalledProcessError
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-AIK_REPO = "https://github.com/SebaUbuntu/AIK-Linux-mirror"
+AIK_REPO = "https://github.com/EduardoA3677/AIK-Linux-mirror"
 
 ALLOWED_OS = [
 	"Linux",
@@ -43,6 +42,9 @@ class AIKImageInfo:
 		ramdisk_offset: Optional[str],
 		sigtype: Optional[str],
 		tags_offset: Optional[str],
+		vendor_ramdisk: Optional[Path] = None,  # Añadido para vendor_boot v4
+		vendor_ramdisk_table: Optional[Path] = None,  # Añadido para vendor_boot v4
+		vendor_bootconfig: Optional[Path] = None,  # Añadido para vendor_boot v4
 	):
 		self.kernel = kernel
 		self.dt = dt
@@ -63,9 +65,13 @@ class AIKImageInfo:
 		self.ramdisk_offset = ramdisk_offset
 		self.sigtype = sigtype
 		self.tags_offset = tags_offset
+		# Añadido soporte para vendor_boot v4
+		self.vendor_ramdisk = vendor_ramdisk
+		self.vendor_ramdisk_table = vendor_ramdisk_table
+		self.vendor_bootconfig = vendor_bootconfig
 
 	def __str__(self):
-		return (
+		output = (
 			f"base address: {self.base_address}\n"
 			f"board name: {self.board_name}\n"
 			f"cmdline: {self.cmdline}\n"
@@ -81,7 +87,17 @@ class AIKImageInfo:
 			f"sigtype: {self.sigtype}\n"
 			f"tags offset: {self.tags_offset}\n"
 		)
-
+		
+		# Añadir información de vendor_boot v4 si está disponible
+		if self.vendor_ramdisk is not None:
+			output += f"vendor ramdisk: {self.vendor_ramdisk}\n"
+		if self.vendor_ramdisk_table is not None:
+			output += f"vendor ramdisk table: {self.vendor_ramdisk_table}\n"
+		if self.vendor_bootconfig is not None:
+			output += f"vendor bootconfig: {self.vendor_bootconfig}\n"
+			
+		return output
+		
 class AIKManager:
 	"""
 	This class is responsible for dealing with AIK tasks
@@ -140,6 +156,25 @@ class AIKManager:
 		return self._execute_script("cleanup.sh")
 
 	def _get_current_extracted_info(self, prefix: str):
+		# Determinar si es vendor_boot y tiene header v4
+		header_version = self._read_recovery_file(prefix, "header_version", default="0")
+		
+		# Intentar detectar vendor_boot v4 incluso si el archivo header_version no lo indica
+		if prefix == "vendor_boot":
+			# Verificar si hay evidencia de vendor_boot v4 en el archivo extraído
+			vendor_boot_extracted = self.path / f"{prefix}.extracted"
+			if vendor_boot_extracted.exists():
+				with open(vendor_boot_extracted, 'r') as f:
+					content = f.read()
+					if "Processing vendor_boot v4 ramdisk table" in content:
+						LOGI("Found evidence of vendor_boot v4 in extraction log, overriding header version")
+						header_version = "4"
+		
+		is_vendor_boot_v4 = (prefix == "vendor_boot" and header_version == "4")
+		
+		# Ruta al vendor_ramdisk para vendor_boot v4
+		vendor_ramdisk_path = self.path / "vendor_ramdisk" if is_vendor_boot_v4 and (self.path / "vendor_ramdisk").is_dir() else None
+		
 		return AIKImageInfo(
 			base_address=self._read_recovery_file(prefix, "base"),
 			board_name=self._read_recovery_file(prefix, "board"),
@@ -150,7 +185,7 @@ class AIKManager:
 			dtb_offset=self._read_recovery_file(prefix, "dtb_offset"),
 			dtbo=self._get_extracted_info(prefix, "dtbo", check_size=True) \
 				or self._get_extracted_info(prefix, "recovery_dtbo", check_size=True),
-			header_version=self._read_recovery_file(prefix, "header_version", default="0"),
+			header_version=header_version,
 			image_type=self._read_recovery_file(prefix, "imgtype"),
 			kernel=self._get_extracted_info(prefix, "kernel", check_size=True),
 			kernel_offset=self._read_recovery_file(prefix, "kernel_offset"),
@@ -163,6 +198,10 @@ class AIKManager:
 			ramdisk_offset=self._read_recovery_file(prefix, "ramdisk_offset"),
 			sigtype=self._read_recovery_file(prefix, "sigtype"),
 			tags_offset=self._read_recovery_file(prefix, "tags_offset"),
+			# Añadido soporte para vendor_boot v4
+			vendor_ramdisk=vendor_ramdisk_path,
+			vendor_ramdisk_table=self._get_extracted_info(prefix, "vendor_ramdisk_table", check_size=True),
+			vendor_bootconfig=self._get_extracted_info(prefix, "vendor_bootconfig", check_size=True),
 		)
 
 	def _read_recovery_file(
