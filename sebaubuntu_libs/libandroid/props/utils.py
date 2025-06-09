@@ -12,6 +12,7 @@ PARTITIONS = [
 	in PartitionModel.from_group(PartitionGroup.SSI) + PartitionModel.from_group(PartitionGroup.TREBLE)
 ] + [
 	"bootimage",
+	"vendor_boot",
 ]
 
 def get_partition_props(format_string: str, add_empty: bool = False):
